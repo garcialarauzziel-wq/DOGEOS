@@ -170,6 +170,19 @@ customize_chroot() {
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+for source_file in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do
+    [ -f "$source_file" ] || continue
+    sed -i '/cdrom:/d;/file:\/cdrom/d' "$source_file"
+done
+
+for source_file in /etc/apt/sources.list.d/*.sources; do
+    [ -f "$source_file" ] || continue
+    if grep -qiE 'cdrom:|file:/cdrom' "$source_file"; then
+        awk 'BEGIN { RS=""; ORS="\n\n" } $0 !~ /(cdrom:|file:\/cdrom)/ { print }' "$source_file" > "${source_file}.tmp"
+        mv "${source_file}.tmp" "$source_file"
+    fi
+done
+
 apt-get update
 apt-get install -y --no-install-recommends \
     ca-certificates \
