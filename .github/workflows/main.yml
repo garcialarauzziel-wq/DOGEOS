@@ -1,0 +1,45 @@
+name: Build DogeOS ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      dogeos_version:
+        description: DogeOS version
+        required: true
+        default: "0.1"
+      ubuntu_release:
+        description: Ubuntu release
+        required: true
+        default: "26.04"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android || true
+          sudo rm -rf /opt/ghc || true
+          sudo rm -rf /opt/hostedtoolcache/CodeQL || true
+          df -h
+
+      - name: Build ISO
+        env:
+          DOGEOS_VERSION: ${{ inputs.dogeos_version }}
+          UBUNTU_RELEASE: ${{ inputs.ubuntu_release }}
+        run: |
+          sudo -E bash ./build-dogeos.sh
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: DogeOS-${{ inputs.dogeos_version }}-amd64
+          path: |
+            dist/*.iso
+            dist/*.sha256
+          if-no-files-found: error
