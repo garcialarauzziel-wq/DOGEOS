@@ -35,11 +35,18 @@ jobs:
         run: |
           sudo -E bash ./build-dogeos.sh
 
+      - name: Verify build outputs
+        env:
+          DOGEOS_VERSION: ${{ inputs.dogeos_version }}
+        run: |
+          ls -lh dist
+          test -s "dist/DogeOS-${DOGEOS_VERSION}-amd64.iso"
+          test -s "dist/DogeOS-${DOGEOS_VERSION}-amd64.sha256"
+
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
           name: DogeOS-${{ inputs.dogeos_version }}-amd64
-          path: |
-            dist/*.iso
-            dist/*.sha256
+          path: dist/
           if-no-files-found: error
+          compression-level: 0

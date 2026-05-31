@@ -10,7 +10,7 @@ La forma recomendada, sin instalar Linux ni herramientas en tu PC, es construir 
 4. Asegurate de que exista este archivo en GitHub:
 
 ```text
-.github/workflows/build-dogeos.yml
+.github/workflows/main.yml
 ```
 
 ## 2. Crear el ISO en GitHub
@@ -30,7 +30,7 @@ Adentro estaran:
 
 ```text
 DogeOS-0.1-amd64.iso
-DogeOS-0.1-amd64.iso.sha256
+DogeOS-0.1-amd64.sha256
 ```
 
 El archivo que necesitas para VirtualBox es:

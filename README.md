@@ -26,7 +26,7 @@ That artifact contains:
 
 ```text
 DogeOS-0.1-amd64.iso
-DogeOS-0.1-amd64.iso.sha256
+DogeOS-0.1-amd64.sha256
 ```
 
 ## Local Build Requirements

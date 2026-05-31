@@ -16,6 +16,7 @@ ISO_ROOT="${WORK_DIR}/iso-root"
 EDIT_ROOT="${WORK_DIR}/edit-root"
 BASE_ISO="${CACHE_DIR}/$(basename "${BASE_ISO_URL}")"
 OUTPUT_ISO="${DIST_DIR}/${DOGEOS_NAME}-${DOGEOS_VERSION}-${DOGEOS_ARCH}.iso"
+OUTPUT_SHA256="${DIST_DIR}/${DOGEOS_NAME}-${DOGEOS_VERSION}-${DOGEOS_ARCH}.sha256"
 VOLUME_ID="${DOGEOS_VOLUME_ID:-DOGEOS_${DOGEOS_VERSION//./_}}"
 
 log() {
@@ -284,7 +285,10 @@ build_iso() {
     fi
 
     eval "xorriso -as mkisofs -r -V \"${VOLUME_ID}\" -o \"${OUTPUT_ISO}\" ${boot_opts} \"${ISO_ROOT}\"" >/dev/null
-    sha256sum "$OUTPUT_ISO" > "${OUTPUT_ISO}.sha256"
+    (
+        cd "$DIST_DIR"
+        sha256sum "$(basename "$OUTPUT_ISO")" > "$(basename "$OUTPUT_SHA256")"
+    )
 }
 
 main() {
@@ -306,7 +310,7 @@ main() {
 
     log "Done."
     log "ISO: $OUTPUT_ISO"
-    log "SHA256: ${OUTPUT_ISO}.sha256"
+    log "SHA256: $OUTPUT_SHA256"
 }
 
 main "$@"
