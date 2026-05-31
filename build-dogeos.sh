@@ -100,11 +100,10 @@ download_base_iso() {
 }
 
 cleanup_mounts() {
-    set +e
     local target
     for target in dev/pts proc sys run dev; do
         if mountpoint -q "${EDIT_ROOT}/${target}"; then
-            umount -lf "${EDIT_ROOT}/${target}"
+            umount -lf "${EDIT_ROOT}/${target}" || true
         fi
     done
 }
@@ -284,7 +283,12 @@ build_iso() {
         die "Could not derive boot options from base ISO."
     fi
 
-    eval "xorriso -as mkisofs -r -V \"${VOLUME_ID}\" -o \"${OUTPUT_ISO}\" ${boot_opts} \"${ISO_ROOT}\"" >/dev/null
+    local -a boot_args=()
+    eval "boot_args=(${boot_opts})"
+
+    xorriso -as mkisofs -r -V "$VOLUME_ID" -o "$OUTPUT_ISO" "${boot_args[@]}" "$ISO_ROOT" >/dev/null
+    [ -s "$OUTPUT_ISO" ] || die "ISO was not created: $OUTPUT_ISO"
+
     (
         cd "$DIST_DIR"
         sha256sum "$(basename "$OUTPUT_ISO")" > "$(basename "$OUTPUT_SHA256")"

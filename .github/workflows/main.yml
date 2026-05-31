@@ -1,6 +1,9 @@
 name: Build DogeOS ISO
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       dogeos_version:
@@ -30,14 +33,15 @@ jobs:
 
       - name: Build ISO
         env:
-          DOGEOS_VERSION: ${{ inputs.dogeos_version }}
-          UBUNTU_RELEASE: ${{ inputs.ubuntu_release }}
+          DOGEOS_VERSION: ${{ inputs.dogeos_version || '0.1' }}
+          UBUNTU_RELEASE: ${{ inputs.ubuntu_release || '26.04' }}
         run: |
           sudo -E bash ./build-dogeos.sh
+          df -h
 
       - name: Verify build outputs
         env:
-          DOGEOS_VERSION: ${{ inputs.dogeos_version }}
+          DOGEOS_VERSION: ${{ inputs.dogeos_version || '0.1' }}
         run: |
           ls -lh dist
           test -s "dist/DogeOS-${DOGEOS_VERSION}-amd64.iso"
@@ -46,7 +50,7 @@ jobs:
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: DogeOS-${{ inputs.dogeos_version }}-amd64
+          name: DogeOS-${{ inputs.dogeos_version || '0.1' }}-amd64
           path: dist/
           if-no-files-found: error
           compression-level: 0
