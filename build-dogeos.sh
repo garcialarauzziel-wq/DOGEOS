@@ -170,18 +170,22 @@ customize_chroot() {
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
-for source_file in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do
-    [ -f "$source_file" ] || continue
-    sed -i '/cdrom:/d;/file:\/cdrom/d' "$source_file"
-done
+. /etc/os-release
+ubuntu_codename="${UBUNTU_CODENAME:-${VERSION_CODENAME:-resolute}}"
+rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources
+cat >/etc/apt/sources.list.d/ubuntu.sources <<EOF
+Types: deb
+URIs: http://archive.ubuntu.com/ubuntu
+Suites: ${ubuntu_codename} ${ubuntu_codename}-updates ${ubuntu_codename}-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
-for source_file in /etc/apt/sources.list.d/*.sources; do
-    [ -f "$source_file" ] || continue
-    if grep -qiE 'cdrom:|file:/cdrom' "$source_file"; then
-        awk 'BEGIN { RS=""; ORS="\n\n" } $0 !~ /(cdrom:|file:\/cdrom)/ { print }' "$source_file" > "${source_file}.tmp"
-        mv "${source_file}.tmp" "$source_file"
-    fi
-done
+Types: deb
+URIs: http://security.ubuntu.com/ubuntu
+Suites: ${ubuntu_codename}-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+EOF
 
 apt-get update
 apt-get install -y --no-install-recommends \
@@ -190,8 +194,6 @@ apt-get install -y --no-install-recommends \
     desktop-file-utils \
     software-properties-common
 
-add-apt-repository -y universe || true
-add-apt-repository -y multiverse || true
 dpkg --add-architecture i386 || true
 apt-get update
 apt-get install -y --no-install-recommends \
