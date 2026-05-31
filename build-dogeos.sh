@@ -255,7 +255,12 @@ update_manifests() {
 repack_squashfs() {
     log "Repacking squashfs. This can take a while."
     rm -f "$ISO_ROOT/casper/filesystem.squashfs"
-    mksquashfs "$EDIT_ROOT" "$ISO_ROOT/casper/filesystem.squashfs" -comp xz -b 1048576 -noappend >/dev/null
+    mksquashfs "$EDIT_ROOT" "$ISO_ROOT/casper/filesystem.squashfs" \
+        -comp xz \
+        -b 1048576 \
+        -processors "${MKSQUASHFS_PROCESSORS:-2}" \
+        -mem "${MKSQUASHFS_MEM:-1024M}" \
+        -noappend >/dev/null
 }
 
 update_checksums() {
@@ -273,7 +278,7 @@ update_checksums() {
 
 build_iso() {
     log "Building bootable ISO: $OUTPUT_ISO"
-    rm -f "$OUTPUT_ISO"
+    rm -f "$OUTPUT_ISO" "$OUTPUT_SHA256"
 
     local boot_opts
     boot_opts="$(xorriso -indev "$BASE_ISO" -report_el_torito as_mkisofs 2>/dev/null \
