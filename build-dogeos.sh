@@ -147,12 +147,12 @@ extract_iso() {
 
 mount_chroot() {
     log "Mounting chroot support filesystems."
+    cp -L --remove-destination /etc/resolv.conf "${EDIT_ROOT}/etc/resolv.conf"
     mount --bind /dev "${EDIT_ROOT}/dev"
     mount --bind /run "${EDIT_ROOT}/run"
     mount -t proc proc "${EDIT_ROOT}/proc"
     mount -t sysfs sysfs "${EDIT_ROOT}/sys"
     mount -t devpts devpts "${EDIT_ROOT}/dev/pts"
-    cp /etc/resolv.conf "${EDIT_ROOT}/etc/resolv.conf"
 }
 
 copy_overlay() {
