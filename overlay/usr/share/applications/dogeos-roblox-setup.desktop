@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Install Roblox (Sober)
+Comment=Install or repair Sober for Roblox on DogeOS
+Exec=/usr/local/bin/dogeos-roblox-setup-gui
+Icon=applications-games
+Terminal=false
+Categories=Game;Utility;
+Keywords=Roblox;Sober;DogeOS;Game;

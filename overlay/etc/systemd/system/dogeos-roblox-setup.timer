@@ -1,0 +1,10 @@
+[Unit]
+Description=Schedule Roblox support preparation for DogeOS
+Documentation=https://sober.vinegarhq.org/
+
+[Timer]
+OnBootSec=2min
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+QUIET=0
+if [ "${1:-}" = "--quiet" ]; then
+    QUIET=1
+fi
+
+LOG_FILE="/var/log/dogeos-roblox-setup.log"
+DONE_FILE="/var/lib/dogeos/roblox-setup.done"
+
+log() {
+    printf '%s\n' "$*"
+    printf '[%s] %s\n' "$(date -Is)" "$*" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+need_root() {
+    if [ "${EUID}" -ne 0 ]; then
+        exec sudo -E "$0" "$@"
+    fi
+}
+
+wait_for_network() {
+    local tries=0
+    while [ "$tries" -lt 18 ]; do
+        if curl -fsSL --connect-timeout 5 https://flathub.org/ >/dev/null 2>&1; then
+            return 0
+        fi
+        tries=$((tries + 1))
+        sleep 10
+    done
+    return 1
+}
+
+install_flatpak_if_needed() {
+    if command -v flatpak >/dev/null 2>&1; then
+        return 0
+    fi
+
+    log "Installing Flatpak."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends flatpak gnome-software-plugin-flatpak ca-certificates curl
+}
+
+main() {
+    need_root "$@"
+    mkdir -p /var/lib/dogeos
+    touch "$LOG_FILE" || true
+
+    if ! wait_for_network; then
+        log "Network is not ready; Sober was not installed."
+        exit 0
+    fi
+
+    install_flatpak_if_needed
+
+    log "Adding Flathub."
+    flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+    log "Installing or updating Sober."
+    flatpak install --system -y flathub org.vinegarhq.Sober
+    flatpak update --system -y org.vinegarhq.Sober || true
+
+    touch "$DONE_FILE"
+    log "Sober is ready. Launch it from the app menu to install Roblox."
+
+    if [ "$QUIET" -eq 0 ]; then
+        printf '\nSober is ready. Open Sober from the app menu to finish Roblox setup.\n'
+    fi
+}
+
+main "$@"

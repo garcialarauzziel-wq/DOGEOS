@@ -1,0 +1,7 @@
+[org.gnome.desktop.background]
+picture-uri='file:///usr/share/backgrounds/dogeos-wallpaper.svg'
+picture-uri-dark='file:///usr/share/backgrounds/dogeos-wallpaper.svg'
+picture-options='zoom'
+
+[org.gnome.desktop.screensaver]
+picture-uri='file:///usr/share/backgrounds/dogeos-wallpaper.svg'

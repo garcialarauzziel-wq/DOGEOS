@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+run_terminal() {
+    local cmd='sudo /usr/local/bin/dogeos-exe-setup; printf "\nPress Enter to close..."; read -r _'
+
+    if command -v gnome-terminal >/dev/null 2>&1; then
+        exec gnome-terminal -- bash -lc "$cmd"
+    fi
+    if command -v x-terminal-emulator >/dev/null 2>&1; then
+        exec x-terminal-emulator -e bash -lc "$cmd"
+    fi
+    exec bash -lc "$cmd"
+}
+
+if command -v zenity >/dev/null 2>&1 && command -v pkexec >/dev/null 2>&1; then
+    if pkexec /usr/local/bin/dogeos-exe-setup; then
+        zenity --info --title="DogeOS" --text="EXE support is ready. Use Bottles for Windows apps. For Roblox, use Sober." || true
+    else
+        zenity --error --title="DogeOS" --text="EXE setup failed. Check /var/log/dogeos-exe-setup.log." || true
+        exit 1
+    fi
+else
+    run_terminal
+fi

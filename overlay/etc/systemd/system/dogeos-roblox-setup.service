@@ -1,0 +1,12 @@
+[Unit]
+Description=Prepare Roblox support for DogeOS
+Documentation=https://sober.vinegarhq.org/
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=!/var/lib/dogeos/roblox-setup.done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/dogeos-roblox-setup --quiet
+RemainAfterExit=yes
+TimeoutStartSec=4min

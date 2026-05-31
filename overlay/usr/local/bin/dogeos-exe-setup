@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+LOG_FILE="/var/log/dogeos-exe-setup.log"
+
+log() {
+    printf '%s\n' "$*"
+    printf '[%s] %s\n' "$(date -Is)" "$*" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+need_root() {
+    if [ "${EUID}" -ne 0 ]; then
+        exec sudo -E "$0" "$@"
+    fi
+}
+
+wait_for_network() {
+    local tries=0
+    while [ "$tries" -lt 12 ]; do
+        if curl -fsSL --connect-timeout 5 https://flathub.org/ >/dev/null 2>&1; then
+            return 0
+        fi
+        tries=$((tries + 1))
+        sleep 5
+    done
+    return 1
+}
+
+install_wine_if_needed() {
+    if command -v wine >/dev/null 2>&1 && command -v winetricks >/dev/null 2>&1; then
+        return 0
+    fi
+
+    log "Installing Wine and Winetricks."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends software-properties-common ca-certificates curl
+    add-apt-repository -y universe || true
+    add-apt-repository -y multiverse || true
+    dpkg --add-architecture i386 || true
+    apt-get update
+    apt-get install -y --no-install-recommends wine wine64 wine32:i386 winetricks cabextract unzip fonts-wine
+}
+
+install_bottles_if_network() {
+    if ! wait_for_network; then
+        log "Network is not ready; Bottles was not installed."
+        return 0
+    fi
+
+    if ! command -v flatpak >/dev/null 2>&1; then
+        apt-get install -y --no-install-recommends flatpak gnome-software-plugin-flatpak
+    fi
+
+    log "Adding Flathub and installing Bottles."
+    flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak install --system -y flathub com.usebottles.bottles
+}
+
+main() {
+    need_root "$@"
+    touch "$LOG_FILE" || true
+    install_wine_if_needed
+    install_bottles_if_network
+    log "EXE support is ready. Use Wine for simple installers or Bottles for managed Windows app prefixes."
+    printf '\nEXE support is ready. Use Bottles from the app menu, or run: wine your-app.exe\n'
+    printf 'For Roblox, use Sober. The Windows Roblox .exe is not a reliable Linux path.\n'
+}
+
+main "$@"

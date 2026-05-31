@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Install EXE Support
+Comment=Install or repair Wine, Winetricks, and Bottles
+Exec=/usr/local/bin/dogeos-exe-setup-gui
+Icon=wine
+Terminal=false
+Categories=Utility;System;
+Keywords=Wine;Bottles;EXE;Windows;DogeOS;

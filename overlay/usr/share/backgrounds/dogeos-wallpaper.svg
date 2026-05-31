@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <rect width="3840" height="2160" fill="#101820"/>
+  <rect y="1320" width="3840" height="840" fill="#16242e"/>
+  <circle cx="3100" cy="480" r="260" fill="#f2c14e"/>
+  <path d="M0 1420 C 620 1240, 1120 1560, 1740 1360 S 2840 1220, 3840 1450 L 3840 2160 L 0 2160 Z" fill="#284b63"/>
+  <path d="M0 1580 C 780 1380, 1180 1760, 1960 1510 S 3040 1460, 3840 1690 L 3840 2160 L 0 2160 Z" fill="#3c6e71"/>
+  <text x="190" y="430" font-family="Ubuntu, Cantarell, Arial, sans-serif" font-size="168" font-weight="700" fill="#f7fff7">DogeOS</text>
+  <text x="200" y="540" font-family="Ubuntu, Cantarell, Arial, sans-serif" font-size="52" fill="#dbe9ee">Ubuntu-based desktop for play</text>
+</svg>
