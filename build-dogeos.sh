@@ -14,6 +14,10 @@ WORK_DIR="${WORK_DIR:-${SCRIPT_DIR}/work}"
 DIST_DIR="${DIST_DIR:-${SCRIPT_DIR}/dist}"
 ISO_ROOT="${WORK_DIR}/iso-root"
 EDIT_ROOT="${WORK_DIR}/edit-root"
+LIVE_SQUASHFS=""
+LIVE_MANIFEST=""
+LIVE_MANIFEST_DESKTOP=""
+LIVE_SIZE_FILE=""
 BASE_ISO="${CACHE_DIR}/$(basename "${BASE_ISO_URL}")"
 OUTPUT_ISO="${DIST_DIR}/${DOGEOS_NAME}-${DOGEOS_VERSION}-${DOGEOS_ARCH}.iso"
 OUTPUT_SHA256="${DIST_DIR}/${DOGEOS_NAME}-${DOGEOS_VERSION}-${DOGEOS_ARCH}.sha256"
@@ -108,6 +112,23 @@ cleanup_mounts() {
     done
 }
 
+select_live_squashfs() {
+    local selected
+    selected="$(find "$ISO_ROOT/casper" -maxdepth 1 -type f -name '*.squashfs' -printf '%s\t%p\n' \
+        | sort -rn \
+        | head -n 1 \
+        | cut -f 2-)"
+
+    [ -n "$selected" ] || die "Could not find a live SquashFS image in ${ISO_ROOT}/casper."
+
+    LIVE_SQUASHFS="$selected"
+    LIVE_MANIFEST="${LIVE_SQUASHFS%.squashfs}.manifest"
+    LIVE_MANIFEST_DESKTOP="${LIVE_SQUASHFS%.squashfs}.manifest-desktop"
+    LIVE_SIZE_FILE="${LIVE_SQUASHFS%.squashfs}.size"
+
+    log "Using live filesystem: ${LIVE_SQUASHFS#$ISO_ROOT/}"
+}
+
 extract_iso() {
     log "Cleaning previous work directory."
     cleanup_mounts
@@ -118,8 +139,10 @@ extract_iso() {
     xorriso -osirrox on -indev "$BASE_ISO" -extract / "$ISO_ROOT" >/dev/null
     chmod -R u+w "$ISO_ROOT"
 
+    select_live_squashfs
+
     log "Extracting live filesystem."
-    unsquashfs -d "$EDIT_ROOT" "$ISO_ROOT/casper/filesystem.squashfs" >/dev/null
+    unsquashfs -d "$EDIT_ROOT" "$LIVE_SQUASHFS" >/dev/null
 }
 
 mount_chroot() {
@@ -247,15 +270,15 @@ CHROOT
 
 update_manifests() {
     log "Updating filesystem manifests."
-    chroot "$EDIT_ROOT" dpkg-query -W --showformat='${Package} ${Version}\n' > "$ISO_ROOT/casper/filesystem.manifest"
-    cp "$ISO_ROOT/casper/filesystem.manifest" "$ISO_ROOT/casper/filesystem.manifest-desktop" || true
-    du -sx --block-size=1 "$EDIT_ROOT" | awk '{print $1}' > "$ISO_ROOT/casper/filesystem.size"
+    chroot "$EDIT_ROOT" dpkg-query -W --showformat='${Package} ${Version}\n' > "$LIVE_MANIFEST"
+    cp "$LIVE_MANIFEST" "$LIVE_MANIFEST_DESKTOP" || true
+    du -sx --block-size=1 "$EDIT_ROOT" | awk '{print $1}' > "$LIVE_SIZE_FILE"
 }
 
 repack_squashfs() {
     log "Repacking squashfs. This can take a while."
-    rm -f "$ISO_ROOT/casper/filesystem.squashfs"
-    mksquashfs "$EDIT_ROOT" "$ISO_ROOT/casper/filesystem.squashfs" \
+    rm -f "$LIVE_SQUASHFS"
+    mksquashfs "$EDIT_ROOT" "$LIVE_SQUASHFS" \
         -comp xz \
         -b 1048576 \
         -processors "${MKSQUASHFS_PROCESSORS:-2}" \
